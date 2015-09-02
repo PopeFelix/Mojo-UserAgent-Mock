@@ -3,7 +3,8 @@ use warnings;
 package Mojo::UserAgent::Mock;
 
 # VERSION
-#
+
+# ABSTRACT: A class to provide a mock Mojo user agent, allowing the caller to simulate an HTTP interaction.
 
 # Based on https://metacpan.org/source/JBERGER/Webservice-Shipment-0.03/lib/Webservice/Shipment/MockUserAgent.pm
 
@@ -59,6 +60,15 @@ sub new {
     my $self = shift->SUPER::new(@_);
 
     my $app = $self->app;
+    my %routes;
+    for my $key (keys %{$self->routes}) {
+        if (grep { $key eq $_ } qw/GET POST PUT DELETE OPTIONS PATCH/) {
+            my ($path, $code) = %{delete $self->routes->{$key}};
+            my $method = lc $key;
+            $app->routes->$method($path => $code);
+        }
+    }
+
     if (%{$self->routes}) {
         $app->routes->any(%{$self->routes});
     }
