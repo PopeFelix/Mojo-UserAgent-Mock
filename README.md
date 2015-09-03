@@ -1,48 +1,135 @@
 # NAME
 
-Mojo::UserAgent::Mock - A class to provide a mock Mojo user agent, allowing the caller to simulate an HTTP interaction.
+Mojo::UserAgent::Mock - A class to provide a mock Mojo user agent
 
 # VERSION
 
 version 0.001
 
-# SYNOPSIS
-
-# DESCRIPTION
-
-Allows you to mock requests with a Mojo user agent.  Rewrites request URLs to an internal server instance.
-
-# NAME 
-
-Mojo::UserAgent::Mock
-
-# ATTRIBUTES 
+# ATTRIBUTES
 
 ## app
 
-The Mojolicious application that will service requests sent via this user agent.  This allows you 
-to create a separate app that responds however you like and pass it in.
-
-## mock\_blocking
-
-If set, the user agent will mock processing non-blocking requests. Otherwise the standard 
-application server URL will be used. It doesn't have much effect unless you pass in a full-fledged
-application instance.
+The [Mojolicious](https://metacpan.org/pod/Mojolicious) application that will service requests sent via this user agent.  This gives 
+you the complete Mojolicious feature set, rather than the reduced set provided by ["routes"](#routes)
 
 ## routes
 
-Routes to process. Syntax is the same as in ["any" in Mojolicious::Routes::Route](https://metacpan.org/pod/Mojolicious::Routes::Route#any)
+Routes to process. In general, path specification syntax is the same as in 
+["any" in Mojo::Routes::Route](https://metacpan.org/pod/Mojo::Routes::Route#any). A quick way to specify a path / action is:
+
+    Mojo::UserAgent::Mock->new(
+        routes => [
+            '/path/to/a/thing/:id' => sub {
+                my $c  = shift;
+                my $id = $c->stash('id');
+                $c->render( text => qq{Thing $id} );
+            },
+        ],
+    );
+
+This creates a route such that any request to /path/to/a/thing/FOO returns "Thing FOO". 
+Placeholders (e.g. ":id") are handled as in [Mojolicious::Guides::Routing](https://metacpan.org/pod/Mojolicious::Guides::Routing)
+
+The following special keys, corresponding to HTTP verbs, will allow you to specify routes that only
+match requests with that verb.
+
+- GET
+- POST
+- PUT
+- PATCH
+- OPTIONS
+- DELETE
+
+# SYNOPSIS
+    use Mojo::UserAgent::Mock;
+
+    # Specify different routes for different HTTP verbs
+    my $ua = Mojo::UserAgent::Mock->new(
+        routes => {
+            GET => {
+                '/thing/:id' => sub {
+                    my $c  = shift;
+                    my $id = $c->stash('id');
+                    $c->render( text => qq{Get thing $id} );
+                },
+            },
+            POST => {
+                '/thing/:id' => sub {
+                    my $c  = shift;
+                    my $id = $c->stash('id');
+                    $c->render( text => qq{Post thing $id} );
+                },
+            },
+            PUT => {
+                '/thing/:id' => sub {
+                    my $c  = shift;
+                    my $id = $c->stash('id');
+                    $c->render( text => qq{Put thing $id} );
+                },
+            },
+            PATCH => {
+                '/thing/:id' => sub {
+                    my $c  = shift;
+                    my $id = $c->stash('id');
+                    $c->render( text => qq{Patch thing $id} );
+                },
+            },
+            OPTIONS => {
+                '/thing/:id' => sub {
+                    my $c  = shift;
+                    my $id = $c->stash('id');
+                    $c->render( text => qq{Options thing $id} );
+                },
+            },
+            DELETE => {
+                '/thing/:id' => sub {
+                    my $c  = shift;
+                    my $id = $c->stash('id');
+                    $c->render( text => qq{Delete thing $id} );
+                },
+            },
+        }
+    );
+
+    # Specify routes for all HTTP verbs
+    my $ua = Mojo::UserAgent::Mock->new(
+        routes => {
+            '/thing/:id' => sub {
+                my $c  = shift;
+                my $id = $c->stash('id');
+                $c->render( text => qq{Thing $id} );
+            }
+        }
+    );
+
+    # You can also pass in a complete Mojolicious app
+    my $app = Mojolicious->new();
+    $app->routes->any(
+        '/thing/:id' => sub { 
+            my $c = shift;
+            my $id = $c->stash('id');
+            my $whatsis = $c->param('whatsis');
+            $c->respond_to(
+                json => { json => { id => $id, format => 'json', whatsis => $whatsis } },
+                xml  => { text => qq{<root><id>$id</id><format>xml</format><whatsis>$whatsis</whatsis></root>} },
+                any  => { data => '', status => 204 },
+            );
+        },
+    );
 
 # EVENTS
 
-## mock\_request
+## original\_request 
 
 An event that contains the original request. Useful for inspecting the original request URL, 
 content-type, etc., and making sure they are acting as they ought to.
 
 # ACKNOWLEDGEMENTS
 
-Based heavily on https://metacpan.org/source/JBERGER/Webservice-Shipment-0.03/lib/Webservice/Shipment/MockUserAgent.pm 
+Based heavily on Joel Berger's MockUserAgent in [Webservice::Shipment](https://metacpan.org/pod/Webservice::Shipment)
+
+Everyone in #mojo on irc.perl.org for helping me get my thinking straight on this.
 
 # AUTHOR
 

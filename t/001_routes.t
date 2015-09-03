@@ -99,7 +99,7 @@ subtest 'URL rewrite' => sub {
 
     my $host = 'foo.bar.baz.bak';
     $ua->on(
-        mock_request => sub {
+        original_request => sub {
             my ($ua, $req) = @_;
             my $url = $req->url;
             is( $url->host, $host, 'Hostname matches' );
