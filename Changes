@@ -1,0 +1,6 @@
+Revision history for Perl module Mojo::UserAgent::Mock
+
+{{$NEXT}}
+
+ - Initial development and testing. Support for both app (a Mojolicious app) 
+   and routes (simplified interface to Mojo::Routes::Route::any) attributes.
